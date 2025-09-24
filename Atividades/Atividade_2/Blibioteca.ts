@@ -2,7 +2,6 @@ import { Emprestimo } from "./emprestimo";
 import { Usuario } from "./usuario";
 import { Exemplar } from "./exemplar";
 
-
 export class Blibioteca {
     private emprestimos: Emprestimo[] = [];
 

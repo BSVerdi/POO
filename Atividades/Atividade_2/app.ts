@@ -4,7 +4,6 @@ import { Blibioteca } from "./Blibioteca";
 import { Usuario } from "./usuario";
 
 
-
 function main() {
     const livro1 = new Livro('Dom Quixote', 'Miguel de Cervantes', 'Editora Top', 'Satira', 1605);
     const exemplar1 = new Exemplar('1', livro1);
