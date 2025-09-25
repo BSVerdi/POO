@@ -11,6 +11,10 @@ export class Blibioteca {
             throw new Error('Exemplar não está disponível para empréstimo.');
         }
 
+        if (usuario.status === 'Bloqueado') {
+            throw new Error('Usuário está impossibilitade de realizar empresstimos');
+        }
+
         const emprestimosUsuario = this.emprestimos.filter(
             e => e.usuario.id === usuario.id && 
             e.estado === 'Ativo'
@@ -56,18 +60,7 @@ export class Blibioteca {
         } else return false;
     }
 
-    registrarDevolucaoDanificada(
-        usuario: Usuario,
-        exemplar: Exemplar,
-        dataDevolucao: Date
-    ) {
-        const emprestimo = this.emprestimos.find(
-            e => e.usuario.id === usuario.id &&
-            e.exemplar.id === exemplar.id &&
-            e.estado === 'Ativo'
-        );
-
-        emprestimo?.concluir(dataDevolucao);
+    registrarDevolucaoDanificada(exemplar: Exemplar) {
         exemplar.status = 'Danificado';
     }
 }
