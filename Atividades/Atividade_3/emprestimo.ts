@@ -1,7 +1,7 @@
 import { Usuario } from "./usuario"
 import { estadoExemplar } from "./exemplar";
 import { Exemplar } from "./exemplar";
-import { addDays } from 'date-fns';
+import { differenceInDays, addDays } from 'date-fns';
 
 export class Emprestimo {
     public dataFim: Date;
@@ -23,9 +23,11 @@ export class Emprestimo {
     }
 
     diasAtraso(hoje: Date): number {
-        let limite = this.dataFim;
-        let dataBase = this.estado === 'Ativo' ? hoje : this.dataDevolução!;
-        let atraso = Math.floor((dataBase.getTime() - limite.getTime()) / (1000 * 3600 * 24));
+        if (this.estado === 'Ativo') {
+            throw new Error('O emprestimo ainda está ativo');
+        }
+        
+        const atraso = differenceInDays(this.dataDevolução!, this.dataFim);
         
         return atraso > 0 ? atraso : 0;
     }

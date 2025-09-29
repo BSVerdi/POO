@@ -4,6 +4,7 @@ type statusExemplar =
     | 'Disponível'
     | 'Emprestado'
     | 'Danificado'
+    | 'Reservado'
 
 export type estadoExemplar = 
     | 'Ativo'

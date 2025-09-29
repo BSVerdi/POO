@@ -1,18 +1,28 @@
 import { Emprestimo } from "./emprestimo";
 import { Usuario } from "./usuario";
 import { Exemplar } from "./exemplar";
-import { add, addDays } from "date-fns";
+import { isAfter, addDays } from "date-fns";
+import { Reserva } from "./reserva";
 
 export class Blibioteca {
     private emprestimos: Emprestimo[] = [];
-
+    private reservas: Reserva[] = [];
+    
     emprestar(usuario: Usuario, exemplar: Exemplar, dataInicio: Date): Emprestimo {
         if (exemplar.status !== 'Disponível') {
             throw new Error('Exemplar não está disponível para empréstimo.');
         }
-
+            
         if (usuario.status === 'Bloqueado') {
-            throw new Error('Usuário está impossibilitade de realizar empresstimos');
+            if (isAfter(usuario.dataFimBloqueio!, dataInicio)) {
+                throw new Error('Usuário está impossibilitado de realizar emprestimos.');
+            } else {
+                usuario.status = 'Normal';
+            }
+        }
+
+        if (usuario !== this.proximaReserva(exemplar, dataInicio)) {
+            throw new Error('Há outro(s) usuário(s) na frente.');
         }
 
         const emprestimosUsuario = this.emprestimos.filter(
@@ -43,13 +53,18 @@ export class Blibioteca {
             throw new Error('Empréstimo não encontrado ou já concluído.');
         }
 
+        emprestimo.concluir(dataDevolucao);
+
+        if (exemplar.status === 'Reservado') {
+            this.reservas[0]!.dataExpiracao = addDays(dataDevolucao, 3);
+        } else {
+            exemplar.status = 'Disponível';
+        }
+        
         if (emprestimo.diasAtraso(dataDevolucao)) {
             usuario.status = 'Bloqueado';
             usuario.dataFimBloqueio = addDays(dataDevolucao, emprestimo.diasAtraso(dataDevolucao));
         }
-
-        emprestimo.concluir(dataDevolucao);
-        exemplar.status = 'Disponível';
 
         return emprestimo;
     }
@@ -62,5 +77,29 @@ export class Blibioteca {
 
     registrarDevolucaoDanificada(exemplar: Exemplar) {
         exemplar.status = 'Danificado';
+    }
+
+    reservar(usuario: Usuario, exemplar: Exemplar) {
+        if (usuario.status === 'Bloqueado') {
+            throw new Error('Usuário está impossibilitado de realizar reservas');
+        }
+        
+        const reserva = new Reserva(usuario, exemplar);
+        this.reservas.push(reserva);
+        exemplar.status = 'Reservado';
+    }
+
+    proximaReserva(exemplar: Exemplar, dataHoje: Date) {
+        const reserva = this.reservas.filter(
+            r => r.exemplar.id === exemplar.id &&
+            r.status === 'Ativa' &&
+            isAfter(r.dataExpiracao!, dataHoje)
+        )
+
+        if (!reserva) {
+            throw new Error('Não há nenhuma reserva ativa')
+        }
+
+        return reserva[0]!.usuario;
     }
 }
